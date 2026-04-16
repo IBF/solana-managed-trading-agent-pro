@@ -2,9 +2,9 @@
   "name": "solana-managed-trading-agent-pro",
   "version": "1.0.0",
   "scripts": {
-    "dev": "ts-node src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js",
+    "dev": "node src/index.js",
+    "build": "echo 'No build step needed for this bot'",
+    "start": "node src/index.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push"
   },
@@ -12,13 +12,9 @@
     "grammy": "^1.30.0",
     "@prisma/client": "^5.15.0",
     "@solana/web3.js": "^1.95.0",
-    "@jup-ag/api": "^6.0.0",
     "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "typescript": "^5.5.0",
-    "ts-node": "^10.9.2",
-    "@types/node": "^22.0.0",
     "prisma": "^5.15.0"
   }
 }
