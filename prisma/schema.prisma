@@ -1,0 +1,18 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model UserBot {
+  id                  Int      @id @default(autoincrement())
+  telegramUserId      BigInt   @unique
+  managedBotId        BigInt   @unique
+  managedBotToken     String   @unique
+  solAddress          String   @unique
+  encryptedSolPrivKey String
+  createdAt           DateTime @default(now())
+}
