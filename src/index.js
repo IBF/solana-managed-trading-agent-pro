@@ -1,6 +1,11 @@
-console.log("Vercel function started");
-
 module.exports = async (req, res) => {
-  console.log("Request received:", req.method, req.url);
-  res.status(200).send("✅ Bot is alive on Vercel! Send hello to @Solagm_bot");
+  console.log("Vercel received request");
+
+  if (req.method === "POST") {
+    res.status(200).send("OK");
+    // For now, we just acknowledge the request
+    console.log("Telegram webhook received");
+  } else {
+    res.status(200).send("✅ Server is running on Vercel");
+  }
 };
