@@ -3,9 +3,17 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-const bot = new Bot(process.env.MANAGER_BOT_TOKEN);
+console.log("Starting minimal bot...");
 
-console.log("🚀 Minimal bot started on Vercel");
+const token = process.env.MANAGER_BOT_TOKEN;
+console.log("Token length:", token ? token.length : "MISSING");
+
+if (!token) {
+  console.error("ERROR: MANAGER_BOT_TOKEN is empty or not found!");
+  process.exit(1);
+}
+
+const bot = new Bot(token);
 
 bot.on("message", (ctx) => {
   console.log("Message received:", ctx.message.text);
@@ -14,4 +22,4 @@ bot.on("message", (ctx) => {
 
 bot.start();
 
-console.log("✅ Bot is listening...");
+console.log("✅ Minimal bot is running on Vercel");
