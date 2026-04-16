@@ -1,28 +1,24 @@
-module.exports = async (req, res) => {
-  console.log("=== Vercel Request Received ===");
-  console.log("Method:", req.method);
-  console.log("Body:", req.body ? JSON.stringify(req.body).slice(0, 500) : "No body");
+const { Bot } = require("grammy");
+const dotenv = require("dotenv");
 
-  if (req.method === "POST" && req.body) {
-    res.status(200).send("OK");
+dotenv.config();
 
-    try {
-      const update = req.body;
-      if (update.message) {
-        const chatId = update.message.chat.id;
-        const text = update.message.text || "no text";
+const managerBot = new Bot(process.env.MANAGER_BOT_TOKEN);
 
-        console.log("Message from chatId:", chatId, "Text:", text);
+console.log("🚀 Manager Bot started - troubleshooting mode");
 
-        // Simple reply using grammy if possible, but fallback
-        res.status(200).send("OK");
-      } else if (update.managed_bot) {
-        console.log("Managed bot creation detected!");
-      }
-    } catch (e) {
-      console.error("Error processing update:", e);
-    }
-  } else {
-    res.status(200).send("✅ Vercel function is alive");
-  }
-};
+managerBot.on("managed_bot", async (ctx) => {
+  console.log("✅ Managed bot creation event received!");
+  const token = await ctx.api.getManagedBotToken(ctx.update.managed_bot.bot.id);
+  const userBot = new Bot(token);
+  await userBot.sendMessage(ctx.update.managed_bot.bot.id, "✅ Test: Managed bot creation detected! The system is working.");
+});
+
+managerBot.on("message", async (ctx) => {
+  console.log("📩 Message received from managed bot:", ctx.message.text);
+  await ctx.reply("✅ Manager received your message: " + ctx.message.text + "\n\nThe connection is working.");
+});
+
+managerBot.start();
+
+console.log("✅ Listening for updates from managed bots...");
