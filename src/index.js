@@ -19,27 +19,27 @@ bot.on("message", async (ctx) => {
       "Just paste any Solana token CA to buy/snipe (default 0.5 SOL).\n" +
       "Type /help for commands.");
     return;
-  const { Bot } = require("grammy");
+ 
+const { Bot } = require("grammy");
 const dotenv = require("dotenv");
 
 dotenv.config();
 
 const bot = new Bot(process.env.MANAGER_BOT_TOKEN);
 
-console.log("🚀 Solana Trading Bot started (stable version)");
+console.log("🚀 Regular Bot started");
 
 bot.on("message", async (ctx) => {
   const text = ctx.message.text || "";
+  console.log("Received:", text);
 
-  if (text === "/start" || text === "/help") {
-    await ctx.reply("✅ Welcome to Solana Trading Bot!\n\n" +
-      "Just paste any Solana token CA to buy/snipe (default 0.5 SOL).\n" +
-      "Type /portfolio to see holdings (demo).\n\n" +
-      "Note: This is a demo version. Real trading coming soon.");
-    return;
+  if (text === "/start") {
+    await ctx.reply("✅ Welcome to Solana Trading Bot!\n\nPaste any Solana token CA to buy/snipe.");
+  } else {
+    await ctx.reply("Received: " + text + "\n\nThis is a test reply.");
   }
+});
 
-  module.exports = async (req, res) => {
-  console.log("Vercel function called - minimal version");
-  res.status(200).send("OK");
-};
+bot.start();
+
+console.log("✅ Bot is listening");
