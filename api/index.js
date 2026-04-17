@@ -1,24 +1,29 @@
-const { Bot } = require("grammy");
 const dotenv = require("dotenv");
-
 dotenv.config();
 
-const bot = new Bot(process.env.MANAGER_BOT_TOKEN);
-
-console.log("🚀 Bot handler loaded");
-
 module.exports = async (req, res) => {
-  if (req.method === "POST" && req.body) {
-    console.log("Received update from Telegram");
+  console.log("Webhook received");
 
-    try {
-      await bot.handleUpdate(req.body);
-      res.status(200).send("OK");
-    } catch (error) {
-      console.error("Error handling update:", error);
-      res.status(200).send("OK");
+  if (req.method === "POST" && req.body) {
+    const update = req.body;
+
+    if (update.message) {
+      const chatId = update.message.chat.id;
+      const text = update.message.text || "no text";
+
+      console.log("Message from", chatId, ":", text);
+
+      // Direct reply to Telegram
+      const reply = {
+        method: "sendMessage",
+        chat_id: chatId,
+        text: "✅ Bot received: " + text + "\n\nThe bot is working on Vercel!"
+      };
+
+      res.status(200).json(reply);
+      return;
     }
-  } else {
-    res.status(200).send("✅ Server is running");
   }
+
+  res.status(200).send("OK");
 };
