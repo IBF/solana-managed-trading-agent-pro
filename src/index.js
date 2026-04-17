@@ -39,23 +39,7 @@ bot.on("message", async (ctx) => {
     return;
   }
 
-  if (text === "/portfolio") {
-    await ctx.reply("💰 Portfolio (demo):\n" +
-      "SOL: 2.45 SOL\n" +
-      "No tokens yet.\n\n" +
-      "Fund your wallet to start trading.");
-    return;
-  }
-
-  // Simple CA detection
-  if (text.length > 30 && text.length < 50) {
-    await ctx.reply("🔍 Received token CA:\n" + text + "\n\nBuying 0.5 SOL...\n(This is a demo - real swap coming soon)");
-    return;
-  }
-
-  await ctx.reply("Send a Solana token CA to buy/snipe or type /help.");
-});
-
-bot.start();
-
-console.log("✅ Bot is ready and listening for messages.");
+  module.exports = async (req, res) => {
+  console.log("Vercel function called - minimal version");
+  res.status(200).send("OK");
+};
