@@ -1,22 +1,26 @@
 const { Bot } = require("grammy");
-const { Keypair, PublicKey, VersionedTransaction, Connection } = require("@solana/web3.js");
+const { Keypair, PublicKey } = require("@solana/web3.js");
 const dotenv = require("dotenv");
 const axios = require("axios");
 
 dotenv.config();
 
 const bot = new Bot(process.env.BOT_TOKEN);
-const connection = new Connection(process.env.HELIUS_RPC || "https://api.mainnet-beta.solana.com");
 const FEE_WALLET = process.env.FEE_WALLET || "YOUR_FEE_WALLET_HERE";
 
-console.log("🚀 Solana Trading Agent Bot with Real Jupiter Swaps started");
+console.log("🚀 Solana Trading Agent Bot - Real Swap Ready");
+
+let userWallets = {}; // Temporary storage (we'll use Prisma + encryption later)
 
 bot.on("message", async (ctx) => {
   const text = ctx.message.text || "";
+  const userId = ctx.from.id;
 
   if (text === "/start") {
     const keypair = Keypair.generate();
     const address = keypair.publicKey.toBase58();
+
+    userWallets[userId] = keypair; // Store temporarily
 
     await ctx.reply(
       "✅ Welcome to Solana Trading Agent Bot!\n\n" +
@@ -29,11 +33,17 @@ bot.on("message", async (ctx) => {
     return;
   }
 
-  // Real buy when user pastes token CA
+  // Real buy
   if (text.length > 30 && text.length < 50) {
     const outputMint = text.trim();
+    const wallet = userWallets[userId];
 
-    await ctx.reply(`🔍 Received token: ${outputMint.slice(0, 20)}...\n\nExecuting swap 0.5 SOL → token using Jupiter + Jito...`);
+    if (!wallet) {
+      await ctx.reply("❌ Please send /start first to create your wallet.");
+      return;
+    }
+
+    await ctx.reply(`🔍 Received token: ${outputMint.slice(0, 20)}...\n\nExecuting 0.5 SOL swap using Jupiter...`);
 
     try {
       // 1. Get quote
@@ -41,28 +51,23 @@ bot.on("message", async (ctx) => {
         params: {
           inputMint: "So11111111111111111111111111111111111111112",
           outputMint: outputMint,
-          amount: 500000000, // 0.5 SOL
+          amount: 500000000,
           slippageBps: 100,
         }
       });
 
       const quote = quoteRes.data;
 
-      // 2. Get swap transaction
+      // 2. Get swap transaction with correct userPublicKey
       const swapRes = await axios.post("https://api.jup.ag/swap/v1/swap", {
         quoteResponse: quote,
-        userPublicKey: "TEMP_USER_PUBLIC_KEY", // We'll use user wallet in next version
+        userPublicKey: wallet.publicKey.toBase58(),
         wrapAndUnwrapSol: true,
+        dynamicComputeUnitLimit: true,
+        prioritizationFeeLamports: 1000000, // for Jito speed
       });
 
-      const swapTransaction = swapRes.data.swapTransaction;
-
-      await ctx.reply("✅ Swap transaction prepared!\n\nReal execution with Jito bundle + 1% fee coming in next update.");
-
-      // TODO: In the very next step we will add:
-      // - User wallet signing
-      // - Jito bundle submission
-      // - 1% fee transfer
+      await ctx.reply("✅ Swap transaction built!\n\nSigning and sending via Jito (with 1% fee) coming in next update.");
 
     } catch (err) {
       const msg = err.response?.data?.error || err.message;
@@ -77,4 +82,4 @@ bot.on("message", async (ctx) => {
 
 bot.start();
 
-console.log("✅ Bot running with real Jupiter swap infrastructure");
+console.log("✅ Bot running with correct userPublicKey");
