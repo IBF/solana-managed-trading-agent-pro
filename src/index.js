@@ -38,6 +38,8 @@ bot.on("message", async (ctx) => {
 });
 
 async function main() {
+  const me = await bot.api.getMe();
+  console.log(`🤖 Bot identity: @${me.username} (ID: ${me.id})`);
   await bot.api.deleteWebhook({ drop_pending_updates: true });
   console.log("✅ Webhook cleared, starting long polling...");
   await bot.start();
