@@ -1,5 +1,5 @@
 const { Bot } = require("grammy");
-const { Keypair, PublicKey } = require("@solana/web3.js");
+const { Keypair, PublicKey, Connection } = require("@solana/web3.js");
 const dotenv = require("dotenv");
 const axios = require("axios");
 
@@ -8,6 +8,9 @@ dotenv.config();
 const bot = new Bot(process.env.BOT_TOKEN);
 const FEE_WALLET = process.env.FEE_WALLET;
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
+const HELIUS_RPC = process.env.HELIUS_RPC;
+const rpcUrl = (HELIUS_RPC && HELIUS_RPC.startsWith("http")) ? HELIUS_RPC : "https://api.mainnet-beta.solana.com";
+const connection = new Connection(rpcUrl);
 
 console.log("🚀 Solana Trading Agent Bot (Jupiter V6) started");
 
