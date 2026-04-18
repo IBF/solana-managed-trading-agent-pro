@@ -37,6 +37,15 @@ bot.on("message", async (ctx) => {
   await ctx.reply("Received: " + text + "\n\nThis is a test reply.");
 });
 
-bot.start();
+async function main() {
+  await bot.api.deleteWebhook({ drop_pending_updates: true });
+  console.log("✅ Webhook cleared, starting long polling...");
+  await bot.start();
+}
+
+main().catch((err) => {
+  console.error("❌ Bot failed to start:", err);
+  process.exit(1);
+});
 
 console.log("✅ Bot is listening for messages");
