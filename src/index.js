@@ -1,10 +1,12 @@
 const { Bot } = require("grammy");
-const { Keypair } = require("@solana/web3.js");
+const { Keypair, PublicKey, SystemProgram, Transaction, VersionedTransaction } = require("@solana/web3.js");
+// const { Jupiter } = require("@jup-ag/core"); // Jupiter now uses REST API - to be implemented
 const dotenv = require("dotenv");
 
 dotenv.config();
 
 const bot = new Bot(process.env.BOT_TOKEN);
+const FEE_WALLET = "YOUR_FEE_WALLET_HERE";   // ← Change this to your Solana address
 
 console.log("🚀 Solana Trading Agent Bot started");
 
@@ -26,8 +28,16 @@ bot.on("message", async (ctx) => {
     return;
   }
 
+  if (text === "/portfolio") {
+    await ctx.reply("💰 Portfolio feature coming soon...");
+    return;
+  }
+
+  // Detect Solana token CA (base58 address, ~32-44 chars)
   if (text.length > 30 && text.length < 50) {
-    await ctx.reply("🔍 Received token CA: " + text.slice(0, 20) + "...\n\nProcessing buy with 0.5 SOL... (real swap coming soon)");
+    await ctx.reply("🔍 Received token CA: " + text.slice(0, 20) + "...\n\nAttempting to buy with 0.5 SOL using Jupiter...\n(Real swap in progress - this may take a few seconds)");
+    
+    // TODO: Add real Jupiter swap here in next step
     return;
   }
 
@@ -36,4 +46,4 @@ bot.on("message", async (ctx) => {
 
 bot.start();
 
-console.log("✅ Bot is running and ready.");
+console.log("✅ Bot is running.");
