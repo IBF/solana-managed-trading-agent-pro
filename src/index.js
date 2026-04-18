@@ -7,7 +7,7 @@ const crypto = require("crypto");
 dotenv.config();
 
 const prisma = new PrismaClient();
-const bot = new Bot(process.env.BOT_TOKEN_NEW || process.env.MANAGER_BOT_TOKEN);
+const bot = new Bot(process.env.BOT_TOKEN_NEW);
 
 console.log("🚀 Solana Trading Bot is starting...");
 
