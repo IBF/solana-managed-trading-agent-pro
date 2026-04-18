@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const bot = new Bot(process.env.BOT_TOKEN);
-const FEE_WALLET = "YOUR_FEE_WALLET_HERE";   // ← Change this to your Solana address
+const FEE_WALLET = process.env.FEE_WALLET;
 
 console.log("🚀 Solana Trading Agent Bot started");
 
