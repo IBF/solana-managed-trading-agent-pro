@@ -1,15 +1,15 @@
 const { Bot } = require("grammy");
-const { Keypair, PublicKey, Connection, VersionedTransaction } = require("@solana/web3.js");
+const { Keypair, PublicKey } = require("@solana/web3.js");
 const dotenv = require("dotenv");
 const axios = require("axios");
 
 dotenv.config();
 
 const bot = new Bot(process.env.BOT_TOKEN);
-const connection = new Connection("https://api.mainnet-beta.solana.com");
 const FEE_WALLET = process.env.FEE_WALLET;
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
 
-console.log("🚀 Solana Trading Agent Bot with Jupiter started");
+console.log("🚀 Solana Trading Agent Bot (Jupiter V6) started");
 
 bot.on("message", async (ctx) => {
   const text = ctx.message.text || "";
@@ -31,28 +31,32 @@ bot.on("message", async (ctx) => {
 
   // Detect Solana token CA
   if (text.length > 30 && text.length < 50) {
-    const inputMint = text.trim();   // the token CA the user pasted
-    await ctx.reply(`🔍 Received token: ${inputMint.slice(0, 20)}...\n\nSwapping 0.5 SOL → token using Jupiter...`);
+    const tokenCA = text.trim();
+    await ctx.reply(`🔍 Received token CA: ${tokenCA.slice(0, 20)}...\n\nGetting quote from Jupiter...`);
 
     try {
-      // Get quote from Jupiter
-      const quoteResponse = await axios.get(`https://quote-api.jup.ag/v6/quote`, {
+      const quoteRes = await axios.get("https://quote-api.jup.ag/v6/quote", {
         params: {
           inputMint: "So11111111111111111111111111111111111111112", // SOL
-          outputMint: inputMint,
-          amount: 500000000, // 0.5 SOL (in lamports)
-          slippageBps: 50,   // 0.5% slippage
-        }
+          outputMint: tokenCA,
+          amount: 500000000, // 0.5 SOL in lamports
+          slippageBps: 100,
+        },
       });
 
-      const quote = quoteResponse.data;
+      const quote = quoteRes.data;
+      const estimatedOut = (quote.outAmount / 1_000_000_000).toFixed(4);
 
-      // TODO: In next step we will add the actual swap transaction
-      await ctx.reply("✅ Quote received!\n\nEstimated output: " + (quote.outAmount / 1_000_000_000).toFixed(4) + " tokens\n\nReal swap execution coming in next update.");
+      await ctx.reply(
+        `✅ Quote received!\n` +
+        `You will receive ≈ ${estimatedOut} tokens\n\n` +
+        `Real swap execution coming in the next update (Jito + 1% fee).`
+      );
 
-    } catch (error) {
-      await ctx.reply("❌ Error getting quote from Jupiter. Token may not be tradable or network issue.");
-      console.error(error);
+    } catch (err) {
+      const errorMsg = err.response ? JSON.stringify(err.response.data) : err.message;
+      console.error("Jupiter error:", errorMsg);
+      await ctx.reply("❌ Jupiter error: " + (err.response?.data?.error || err.message || "Unknown"));
     }
     return;
   }
@@ -62,4 +66,4 @@ bot.on("message", async (ctx) => {
 
 bot.start();
 
-console.log("✅ Bot is running with Jupiter quote support.");
+console.log("✅ Bot running with Jupiter V6 support");
