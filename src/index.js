@@ -1,18 +1,14 @@
 const { Bot } = require("grammy");
-const { Keypair, PublicKey, Connection } = require("@solana/web3.js");
+const { Keypair } = require("@solana/web3.js");
 const dotenv = require("dotenv");
 const axios = require("axios");
 
 dotenv.config();
 
 const bot = new Bot(process.env.BOT_TOKEN);
-const FEE_WALLET = process.env.FEE_WALLET;
-const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-const HELIUS_RPC = process.env.HELIUS_RPC;
-const rpcUrl = (HELIUS_RPC && HELIUS_RPC.startsWith("http")) ? HELIUS_RPC : "https://api.mainnet-beta.solana.com";
-const connection = new Connection(rpcUrl);
+const FEE_WALLET = process.env.FEE_WALLET || "YOUR_FEE_WALLET_HERE";
 
-console.log("🚀 Solana Trading Agent Bot (Jupiter V6) started");
+console.log("🚀 Solana Trading Agent Bot (fixed Jupiter API) started");
 
 bot.on("message", async (ctx) => {
   const text = ctx.message.text || "";
@@ -35,38 +31,38 @@ bot.on("message", async (ctx) => {
   // Detect Solana token CA
   if (text.length > 30 && text.length < 50) {
     const tokenCA = text.trim();
-    await ctx.reply(`🔍 Received token CA: ${tokenCA.slice(0, 20)}...\n\nGetting quote from Jupiter...`);
+    await ctx.reply(`🔍 Received token: ${tokenCA.slice(0, 20)}...\n\nGetting best quote from Jupiter...`);
 
     try {
-      const quoteRes = await axios.get("https://quote-api.jup.ag/v6/quote", {
+      const quoteRes = await axios.get("https://api.jup.ag/swap/v1/quote", {
         params: {
           inputMint: "So11111111111111111111111111111111111111112", // SOL
           outputMint: tokenCA,
-          amount: 500000000, // 0.5 SOL in lamports
-          slippageBps: 100,
-        },
+          amount: 500000000,        // 0.5 SOL
+          slippageBps: 100,         // 1%
+        }
       });
 
       const quote = quoteRes.data;
-      const estimatedOut = (quote.outAmount / 1_000_000_000).toFixed(4);
+      const estimatedOut = (Number(quote.outAmount) / 1_000_000_000).toFixed(6);
 
       await ctx.reply(
-        `✅ Quote received!\n` +
-        `You will receive ≈ ${estimatedOut} tokens\n\n` +
-        `Real swap execution coming in the next update (Jito + 1% fee).`
+        `✅ Quote received!\n\n` +
+        `You will receive ≈ **${estimatedOut}** tokens\n\n` +
+        `Real swap (with Jito + 1% fee) coming in the next update.`
       );
 
     } catch (err) {
-      const errorMsg = err.response ? JSON.stringify(err.response.data) : err.message;
-      console.error("Jupiter error:", errorMsg);
-      await ctx.reply("❌ Jupiter error: " + (err.response?.data?.error || err.message || "Unknown"));
+      const msg = err.response?.data?.error || err.message || "Unknown error";
+      console.error("Jupiter error:", msg);
+      await ctx.reply("❌ Jupiter quote failed: " + msg + "\n\nTry a more established token or try again later.");
     }
     return;
   }
 
-  await ctx.reply("Send a Solana token CA to buy/snipe or type /start");
+  await ctx.reply("Paste a Solana token CA to buy/snipe or type /start");
 });
 
 bot.start();
 
-console.log("✅ Bot running with Jupiter V6 support");
+console.log("✅ Bot is running with updated Jupiter v1 API");
