@@ -9,10 +9,11 @@
     "prisma:push": "prisma db push"
   },
   "dependencies": {
-    "grammy": "^1.30.0",
     "@prisma/client": "^5.15.0",
     "@solana/web3.js": "^1.95.0",
-    "dotenv": "^16.4.5"
+    "axios": "^1.15.0",
+    "dotenv": "^16.4.5",
+    "grammy": "^1.30.0"
   },
   "devDependencies": {
     "prisma": "^5.15.0"
