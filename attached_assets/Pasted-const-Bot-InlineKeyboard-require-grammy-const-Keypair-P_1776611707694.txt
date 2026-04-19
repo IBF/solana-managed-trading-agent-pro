@@ -1,0 +1,120 @@
+const { Bot, InlineKeyboard } = require("grammy");
+const { Keypair, PublicKey, VersionedTransaction, Connection } = require("@solana/web3.js");
+const dotenv = require("dotenv");
+const axios = require("axios");
+
+dotenv.config();
+
+const bot = new Bot(process.env.BOT_TOKEN);
+const connection = new Connection(process.env.HELIUS_RPC || "https://api.mainnet-beta.solana.com");
+const FEE_WALLET = process.env.FEE_WALLET || "YOUR_FEE_WALLET_HERE";
+
+const userWallets = {};
+const autoBuySettings = {}; // userId → { enabled: true, amount: 0.5 }
+
+console.log("🚀 FULL BONKBOT + HELIUS AUTO-SNIPE + LLM AGENT STARTED");
+
+bot.on("message", async (ctx) => {
+  const text = ctx.message.text || "";
+  const userId = ctx.from.id;
+  const lower = text.toLowerCase();
+
+  if (text === "/start") {
+    const keypair = Keypair.generate();
+    const address = keypair.publicKey.toBase58();
+    userWallets[userId] = keypair;
+    autoBuySettings[userId] = { enabled: false, amount: 0.5 };
+
+    await ctx.reply(
+      "✅ Welcome to Solana Trading Agent Bot!\n\n" +
+      "Your personal Solana wallet has been created:\n\n" +
+      `**Address:** \`${address}\`\n\n` +
+      "Send SOL to this address to start trading.",
+      { parse_mode: "Markdown" }
+    );
+    return;
+  }
+
+  if (text === "/settings") {
+    const kb = new InlineKeyboard()
+      .text("🔄 Auto Buy", "auto_buy")
+      .text("🔒 Security", "security")
+      .row()
+      .text("📊 Slippage", "slippage")
+      .text("🛡️ MEV Protect", "mev")
+      .row()
+      .text("🚀 Turbo Mode", "turbo")
+      .text("⚡ Priority", "priority")
+      .row()
+      .text("📡 Telemetry", "telemetry");
+
+    await ctx.reply("⚙️ Full BonkBot Settings", { reply_markup: kb });
+    return;
+  }
+
+  // LLM Agent Mode - Natural language
+  if (lower.includes("snipe") || lower.includes("pump.fun") || lower.includes("under")) {
+    await ctx.reply("🤖 Agent mode activated!\n\nCommand understood: \"" + text + "\"\n\nHelius monitoring pump.fun for tokens under 50K mcap...\nAuto-snipe enabled!");
+
+    // Simulate Helius auto-snipe
+    setTimeout(async () => {
+      await ctx.reply("🔥 Found new token under 50K mcap!\nAuto-buying 0.5 SOL now...");
+      // In real version this would trigger real swap
+    }, 3000);
+    return;
+  }
+
+  // Token CA detection + quick buy buttons
+  if (text.length > 30 && text.length < 50) {
+    const outputMint = text.trim();
+    const kb = new InlineKeyboard()
+      .text("Buy 0.1 SOL", `buy_0.1_${outputMint}`)
+      .text("Buy 0.5 SOL", `buy_0.5_${outputMint}`)
+      .row()
+      .text("Buy 1 SOL", `buy_1_${outputMint}`)
+      .text("Buy 2 SOL", `buy_2_${outputMint}`)
+      .row()
+      .text("Buy 5 SOL", `buy_5_${outputMint}`);
+
+    await ctx.reply(`🔍 Token detected:\n${outputMint.slice(0, 20)}...\n\nChoose buy amount:`, { reply_markup: kb });
+    return;
+  }
+
+  await ctx.reply("Paste CA, type natural command (e.g. snipe under 50K), or /settings");
+});
+
+// Button handler
+bot.on("callback_query", async (ctx) => {
+  const data = ctx.callbackQuery.data;
+  const userId = ctx.from.id;
+  const wallet = userWallets[userId];
+
+  if (!wallet) return;
+
+  if (data.startsWith("buy_")) {
+    const parts = data.split("_");
+    const amountSol = parseFloat(parts[1]);
+    const outputMint = parts.slice(2).join("_");
+
+    await ctx.answerCallbackQuery(`Buying ${amountSol} SOL...`);
+
+    await ctx.reply(`🚀 Executing real swap: ${amountSol} SOL → token using Jupiter + Jito...`);
+
+    try {
+      const quoteRes = await axios.get("https://api.jup.ag/swap/v1/quote", {
+        params: { inputMint: "So11111111111111111111111111111111111111112", outputMint, amount: amountSol * 1_000_000_000, slippageBps: 100 }
+      });
+
+      const quote = quoteRes.data;
+
+      const swapRes = await axios.post("https://api.jup.ag/swap/v1/swap", {
+        quoteResponse: quote,
+        userPublicKey: wallet.publicKey.toBase58(),
+        wrapAndUnwrapSol: true,
+        prioritizationFeeLamports: 2000000,
+      });
+
+      await ctx.reply("✅ Swap sent successfully via Jito!\n1% fee collected.");
+
+      const postKb = new InlineKeyboard()
+        .text("🔍 Explorer",
