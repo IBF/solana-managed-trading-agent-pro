@@ -11,7 +11,7 @@ const FEE_WALLET = process.env.FEE_WALLET || "YOUR_FEE_WALLET_HERE";
 
 const userWallets = {};
 
-console.log("🚀 Full BonkBot-style Solana Trading Agent started");
+console.log("🚀 FULL BONKBOT-STYLE SOLANA TRADING AGENT STARTED");
 
 bot.on("message", async (ctx) => {
   const text = ctx.message.text || "";
@@ -66,7 +66,7 @@ bot.on("message", async (ctx) => {
   await ctx.reply("Paste token CA or use /start /settings");
 });
 
-// Callback handler for buttons
+// Callback handler
 bot.on("callback_query", async (ctx) => {
   const data = ctx.callbackQuery.data;
   const userId = ctx.from.id;
@@ -83,18 +83,20 @@ bot.on("callback_query", async (ctx) => {
     const outputMint = parts.slice(2).join("_");
 
     await ctx.answerCallbackQuery(`Buying ${amountSol} SOL...`);
-
     await ctx.reply(`🚀 Executing real swap: ${amountSol} SOL → token using Jupiter + Jito...`);
 
     try {
-      // Quote
       const quoteRes = await axios.get("https://api.jup.ag/swap/v1/quote", {
-        params: { inputMint: "So11111111111111111111111111111111111111112", outputMint, amount: amountSol * 1_000_000_000, slippageBps: 100 }
+        params: {
+          inputMint: "So11111111111111111111111111111111111111112",
+          outputMint: outputMint,
+          amount: amountSol * 1_000_000_000,
+          slippageBps: 100,
+        }
       });
 
       const quote = quoteRes.data;
 
-      // Swap transaction
       const swapRes = await axios.post("https://api.jup.ag/swap/v1/swap", {
         quoteResponse: quote,
         userPublicKey: wallet.publicKey.toBase58(),
@@ -110,7 +112,6 @@ bot.on("callback_query", async (ctx) => {
     }
   }
 
-  // Settings buttons (placeholders for full BonkBot features)
   if (["auto_buy", "security", "slippage", "mev", "turbo", "priority"].includes(data)) {
     await ctx.answerCallbackQuery(data + " settings");
     await ctx.reply(`🔧 ${data.toUpperCase()} configuration coming in next update.\n\nFull BonkBot features (auto-buy toggle, 2FA, slippage, max impact, MEV protect, turbo, priority, sell protection, telemetry, post-swap window with explorer/chart/PNL/share, etc.) will be added soon.`);
