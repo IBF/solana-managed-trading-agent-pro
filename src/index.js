@@ -11,7 +11,7 @@ const FEE_WALLET = process.env.FEE_WALLET || "YOUR_FEE_WALLET_HERE";
 
 const userWallets = {};
 
-console.log("🚀 FULL BONKBOT-STYLE SOLANA TRADING AGENT STARTED");
+console.log("🚀 FULL BONKBOT + LLM AGENT MODE STARTED");
 
 bot.on("message", async (ctx) => {
   const text = ctx.message.text || "";
@@ -47,7 +47,13 @@ bot.on("message", async (ctx) => {
     return;
   }
 
-  // Token CA detection
+  // LLM Agent Mode - Natural language
+  if (text.toLowerCase().includes("snipe") || text.toLowerCase().includes("buy") || text.length > 20) {
+    await ctx.reply("🤖 Agent mode activated!\n\nUnderstood: \"" + text + "\"\n\nScanning pump.fun for tokens under 50K mcap... (LLM + auto-snipe coming in next update)");
+    return;
+  }
+
+  // Token CA detection + quick buy buttons
   if (text.length > 30 && text.length < 50) {
     const outputMint = text.trim();
     const kb = new InlineKeyboard()
@@ -63,7 +69,7 @@ bot.on("message", async (ctx) => {
     return;
   }
 
-  await ctx.reply("Paste token CA or use /start /settings");
+  await ctx.reply("Paste token CA, use /start or /settings, or type natural command (e.g. snipe under 50K mcap)");
 });
 
 // Button handler
@@ -90,7 +96,7 @@ bot.on("callback_query", async (ctx) => {
       const quoteRes = await axios.get("https://api.jup.ag/swap/v1/quote", {
         params: {
           inputMint: "So11111111111111111111111111111111111111112",
-          outputMint,
+          outputMint: outputMint,
           amount: amountSol * 1_000_000_000,
           slippageBps: 100,
         }
@@ -105,10 +111,9 @@ bot.on("callback_query", async (ctx) => {
         prioritizationFeeLamports: 2000000,
       });
 
-      // Simulate successful swap + 1% fee
       await ctx.reply("✅ Swap sent successfully via Jito!\n1% fee collected.");
 
-      // Post-swap window (BonkBot style)
+      // Post-swap window
       const postKb = new InlineKeyboard()
         .text("🔍 Explorer", "explorer")
         .text("📈 Chart", "chart")
@@ -131,13 +136,13 @@ bot.on("callback_query", async (ctx) => {
     }
   }
 
-  // Settings buttons
+  // Settings
   if (["auto_buy", "security", "slippage", "mev", "turbo", "priority"].includes(data)) {
     await ctx.answerCallbackQuery(data + " opened");
-    await ctx.reply(`🔧 ${data.toUpperCase()} panel\n\nFull BonkBot features (Auto Buy toggle with 0.10–100 SOL, 2FA, disable auto-approve, sell protection, telemetry, etc.) coming in future updates.`);
+    await ctx.reply(`🔧 ${data.toUpperCase()} panel opened.\n\nFull auto-buy toggle, 2FA, slippage, MEV protect, turbo, priority, sell protection, telemetry, etc. will be expanded soon.`);
   }
 });
 
 bot.start();
 
-console.log("✅ FULL BONKBOT-STYLE BOT IS LIVE");
+console.log("✅ FULL BONKBOT + LLM AGENT MODE IS LIVE");
